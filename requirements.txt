@@ -1,0 +1,8 @@
+streamlit==1.44.1
+pandas==2.2.3
+numpy==2.1.3
+# Must match the version used to serialize health_score_model.joblib.
+scikit-learn==1.8.0
+shap==0.52.0
+plotly==6.8.0
+joblib==1.4.2
