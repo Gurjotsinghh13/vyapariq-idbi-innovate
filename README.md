@@ -39,14 +39,14 @@ In the included demo:
 - Vendor A (stable trend, low volatility): **Health Score 93.9 — Low Risk**
 - Vendor B (declining trend, high volatility, cash recycling): **Health Score 6.1 — High Risk**
 
-The model explicitly assigns near-zero importance to GST/EPFO status
-(confirmed via SHAP feature importance) — it is not penalizing thin-file
-status, only genuine cash-flow risk signals.
+Model-based risk-driver attribution assigns near-zero importance to GST/EPFO
+status — it is not penalizing thin-file status, only genuine cash-flow risk
+signals.
 
 ## Features
 
 - Explainable Financial Health Score (0–100) and risk assessment
-- SHAP decision trail with a trained Random Forest model
+- Deployment-safe model-based decision trail with a trained Random Forest model
 - Live what-if simulator using the existing trained model
 - Deterministic strengths, weaknesses, insights, and recommended actions
 - Illustrative 12-month score timeline with explicit synthetic-data labelling
@@ -60,7 +60,6 @@ status, only genuine cash-flow risk signals.
 - Python
 - Streamlit
 - Scikit-learn
-- SHAP
 - Pandas / NumPy
 - Plotly
 
@@ -75,10 +74,10 @@ _Add dashboard screenshots here after deployment (see `/screenshots` folder)._
   shape, plus realistic noise/label-overlap (no dataset is 100% clean)
 - **Random Forest classifier** (`model/train_model.py`) — 93% accuracy,
   0.94 ROC-AUC on held-out data
-- **Explainable scoring engine** (`model/score_engine.py`) — SHAP-based
+- **Explainable scoring engine** (`model/score_engine.py`) — model-based
   feature attribution, plain-language reasoning, strengths/weaknesses
   extraction, and a rule-based (auditable) loan product recommendation
-- **Streamlit dashboard** (`app/app.py`) — score and SHAP assessment,
+- **Streamlit dashboard** (`app/app.py`) — score and risk-driver assessment,
   what-if simulation, deterministic recommendations, timeline, peer
   benchmarks, product eligibility, and downloadable Health Card
 
@@ -94,7 +93,7 @@ Feature Engineering (UPI trend/volatility, cash-recycling, gig-order signals)
 Random Forest Classifier ──► Health Score (0-100) + Risk Category
         │
         ▼
-SHAP Explainability Engine
+Model-Based Explainability Engine
         │
         ├──► Plain-language narrative (with regulatory context)
         ├──► Strengths / Weaknesses extraction
@@ -106,23 +105,23 @@ SHAP Explainability Engine
 
 ## Running Locally
 
-Deploy with Python 3.12, which is compatible with the pinned model and SHAP
+Deploy with Python 3.12, which is compatible with the pinned model
 dependencies. In Streamlit Community Cloud, select Python 3.12 under Advanced
-settings and use `msme-health-score/app/app.py` as the entrypoint.
+settings and use `app/app.py` as the entrypoint.
 
 Run local commands from the Git repository root:
 
 ```bash
 pip install -r requirements.txt
-streamlit run msme-health-score/app/app.py
+streamlit run app/app.py
 ```
 
 The repository already includes the synthetic dataset and trained model.
 Regenerate or retrain only when intentionally changing those artifacts:
 
 ```bash
-python msme-health-score/data/generate_data.py
-python msme-health-score/model/train_model.py
+python data/generate_data.py
+python model/train_model.py
 ```
 
 ## Regulatory Grounding

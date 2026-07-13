@@ -4,18 +4,19 @@ Explainable Financial Health scoring engine.
 Given a vendor's feature row, produces:
   - health_score (0-100, higher = healthier)
   - risk_category (Low / Medium / High)
-  - SHAP-based feature contributions
+  - deployment-safe model-based feature contributions
   - a plain-language explanation, with an explicit callout when GST/EPFO
     thinness is present but NOT being treated as a risk driver -- this is
     the core "explainable contradiction resolution" demo moment.
 """
 
+from pathlib import Path
+
 import joblib
 import pandas as pd
-import shap
 
-import os
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "health_score_model.joblib")
+MODEL_PATH = Path(__file__).resolve().with_name("health_score_model.joblib")
+DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "vendors_synthetic.csv"
 
 FEATURE_LABELS = {
     "avg_monthly_upi_inflow": "Average monthly UPI inflow",
@@ -40,7 +41,7 @@ class HealthScoreEngine:
         bundle = joblib.load(model_path)
         self.model = bundle["model"]
         self.features = bundle["features"]
-        self.explainer = shap.TreeExplainer(self.model)
+        self.reference_values = self._load_reference_values()
 
     def score_vendor(self, vendor_row: dict):
         X = pd.DataFrame([vendor_row])[self.features]
@@ -55,14 +56,7 @@ class HealthScoreEngine:
         else:
             risk_category = "High Risk"
 
-        shap_values = self.explainer.shap_values(X)
-        # shap_values shape handling for binary RF classifier
-        if isinstance(shap_values, list):
-            contrib = shap_values[1][0]
-        else:
-            contrib = shap_values[0, :, 1] if shap_values.ndim == 3 else shap_values[0]
-
-        contributions = pd.Series(contrib, index=self.features).sort_values(key=abs, ascending=False)
+        contributions = self._explain_with_model_perturbation(X)
 
         narrative = self._build_narrative(vendor_row, contributions, health_score, risk_category)
         strengths, weaknesses = self._extract_strengths_weaknesses(vendor_row, contributions)
@@ -79,10 +73,40 @@ class HealthScoreEngine:
             "recommendation_confidence": confidence,
         }
 
+    def _load_reference_values(self) -> pd.Series:
+        """Load cohort medians used as a safe baseline for local explanations.
+
+        SHAP/Numba can trigger native-library crashes on some hosted Linux
+        images. For the demo app we keep explainability deterministic and
+        deployment-safe by comparing the model's current risk probability with
+        the probability after replacing one feature at a time by its cohort
+        median. Positive values increase predicted risk; negative values reduce
+        predicted risk.
+        """
+        try:
+            reference_df = pd.read_csv(DATA_PATH)
+            return reference_df[self.features].median(numeric_only=True)
+        except (FileNotFoundError, KeyError, OSError, ValueError):
+            return pd.Series(0.0, index=self.features)
+
+    def _explain_with_model_perturbation(self, X: pd.DataFrame) -> pd.Series:
+        X = X.astype(float)
+        current_risk = self.model.predict_proba(X)[0][1]
+        rows = []
+        for feature in self.features:
+            perturbed = X.copy()
+            perturbed.at[perturbed.index[0], feature] = self.reference_values.get(feature, 0.0)
+            rows.append(perturbed)
+
+        perturbed_X = pd.concat(rows, ignore_index=True)
+        perturbed_risk = self.model.predict_proba(perturbed_X)[:, 1]
+        contributions = current_risk - perturbed_risk
+        return pd.Series(contributions, index=self.features).sort_values(key=abs, ascending=False)
+
     def _extract_strengths_weaknesses(self, vendor_row, contributions):
         """Rule-based, human-readable strengths/weaknesses -- the 'Financial Health Card' view.
-        Uses the same SHAP contributions so this stays consistent with the score, not a separate
-        made-up checklist."""
+        Uses the same model-based contributions so this stays consistent with the score,
+        not a separate made-up checklist."""
         strengths, weaknesses = [], []
 
         def add(cond, positive_text, negative_text, feature):
