@@ -133,23 +133,47 @@ st.markdown("""
     [data-testid="stSlider"] {padding:.2rem 0 .7rem;}
 
     .hero {
-        display:flex;
-        align-items:flex-end;
-        justify-content:space-between;
-        gap:1.5rem;
+        display:grid;
+        grid-template-columns:minmax(0, 1.65fr) minmax(300px, .9fr);
+        align-items:stretch;
+        gap:1.1rem;
         border:1px solid var(--border);
         background:linear-gradient(135deg, #FFFFFF 0%, #F8FBFF 58%, #EEF6FF 100%);
-        border-radius:24px;
-        padding:1.45rem 1.6rem;
-        margin-bottom:1.35rem;
+        border-radius:20px;
+        padding:1.15rem;
+        margin-bottom:1.1rem;
         box-shadow:var(--shadow-md);
     }
 
-    .eyebrow {color:var(--primary) !important; font-size:.78rem; font-weight:780; letter-spacing:.105em; text-transform:uppercase; margin-bottom:.35rem;}
-    .hero-title {color:var(--text-primary) !important; font-size:2.35rem; line-height:1.08; font-weight:780; letter-spacing:-.04em; margin:0;}
-    .hero-subtitle {color:var(--text-muted) !important; max-width:760px; font-size:1rem; line-height:1.58; margin:.55rem 0 0;}
-    .status-strip {display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; min-width:280px;}
-    .status-pill {border:1px solid var(--border); background:#FFFFFF; color:var(--text-secondary) !important; border-radius:999px; padding:.48rem .75rem; font-size:.78rem; font-weight:720; white-space:nowrap; box-shadow:var(--shadow-sm);}
+    .hero-main {
+        padding:.35rem .35rem .35rem .25rem;
+        align-self:center;
+    }
+
+    .eyebrow {color:var(--primary) !important; font-size:.76rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; margin-bottom:.32rem;}
+    .hero-title {color:var(--text-primary) !important; font-size:2.15rem; line-height:1.06; font-weight:800; letter-spacing:-.045em; margin:0;}
+    .hero-subtitle {color:var(--text-muted) !important; max-width:780px; font-size:.98rem; line-height:1.5; margin:.48rem 0 0;}
+    .hero-value {color:var(--text-primary) !important; max-width:820px; font-size:.92rem; line-height:1.5; font-weight:650; margin:.72rem 0 0;}
+    .hero-info-panel {
+        background:#FFFFFF;
+        border:1px solid var(--border);
+        border-radius:16px;
+        padding:.95rem;
+        box-shadow:var(--shadow-sm);
+    }
+    .hero-info-title {color:var(--text-primary) !important; font-size:.86rem; font-weight:780; letter-spacing:.02em; margin:0 0 .65rem;}
+    .hero-info-grid {display:grid; gap:.58rem;}
+    .hero-info-row {
+        display:grid;
+        grid-template-columns:112px 1fr;
+        gap:.75rem;
+        align-items:start;
+        padding:.58rem 0;
+        border-top:1px solid var(--border);
+    }
+    .hero-info-row:first-child {border-top:0; padding-top:0;}
+    .hero-info-label {color:var(--text-secondary) !important; font-size:.72rem; font-weight:780; letter-spacing:.055em; text-transform:uppercase;}
+    .hero-info-value {color:var(--text-primary) !important; font-size:.86rem; font-weight:700; line-height:1.35;}
 
     .summary-card, .panel-card, .health-card, .list-card {
         background:var(--surface);
@@ -199,15 +223,15 @@ st.markdown("""
     hr {border-color:var(--border) !important; margin:1.5rem 0 !important;}
 
     @media (max-width: 1100px) {
-        .hero {align-items:flex-start; flex-direction:column;}
-        .status-strip {justify-content:flex-start; min-width:0;}
+        .hero {grid-template-columns:1fr;}
         .signal-grid {grid-template-columns:repeat(2, minmax(0,1fr));}
     }
 
     @media (max-width: 760px) {
         .block-container {padding:1.2rem .85rem 2.2rem;}
         .hero {padding:1.1rem; border-radius:18px;}
-        .hero-title {font-size:1.9rem;}
+        .hero-title {font-size:1.75rem;}
+        .hero-info-row {grid-template-columns:1fr; gap:.2rem;}
         .summary-card {min-height:auto;}
         .signal-grid {grid-template-columns:1fr;}
         .health-card-header {flex-direction:column;}
@@ -495,18 +519,38 @@ assessment_time = datetime.now().astimezone().strftime("%d %b %Y, %I:%M %p")
 st.markdown(
     f"""
     <section class="hero">
-        <div>
-            <div class="eyebrow">IDBI Innovate 2026 · MSME Credit Intelligence</div>
+        <div class="hero-main">
+            <div class="eyebrow">MSME Credit Decision Support</div>
             <h1 class="hero-title">VyaparIQ</h1>
             <p class="hero-subtitle">
-                Enterprise financial-health assessment for new-to-credit and new-to-bank MSMEs,
-                combining alternate operating signals with auditable credit rationale.
+                Relationship-manager workspace for assessing thin-file MSMEs using operating
+                signals, risk drivers and preliminary product-fit indicators.
+            </p>
+            <p class="hero-value">
+                Supports faster credit conversations by translating alternate business activity
+                into a clear credit health view for review, monitoring and customer engagement.
             </p>
         </div>
-        <div class="status-strip">
-            <span class="status-pill">Synthetic demo data</span>
-            <span class="status-pill">Model-backed assessment</span>
-            <span class="status-pill">Updated {escape(assessment_time)}</span>
+        <div class="hero-info-panel">
+            <div class="hero-info-title">Assessment Context</div>
+            <div class="hero-info-grid">
+                <div class="hero-info-row">
+                    <div class="hero-info-label">Environment</div>
+                    <div class="hero-info-value">Prototype portfolio simulation</div>
+                </div>
+                <div class="hero-info-row">
+                    <div class="hero-info-label">Purpose</div>
+                    <div class="hero-info-value">RM and credit officer decision support</div>
+                </div>
+                <div class="hero-info-row">
+                    <div class="hero-info-label">Status</div>
+                    <div class="hero-info-value">Indicative assessment, subject to bank policy</div>
+                </div>
+                <div class="hero-info-row">
+                    <div class="hero-info-label">Updated</div>
+                    <div class="hero-info-value">{escape(assessment_time)}</div>
+                </div>
+            </div>
         </div>
     </section>
     """,
